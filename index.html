@@ -53,8 +53,8 @@
     client.onMessageArrived = function (message) {
       if (message.destinationName === config.sub) {
 	var temperatura = JSON.parse(message.payloadString).temperatura;
-	$("#max").html("<span>" + temperatura.max + "</span>");
-	$("#min").html("<span>" + temperatura.min + "</span>");
+	$("#max").html("<span style='font-size: 18px;'>" + temperatura.max + " <sup>o</sup>C</span>");
+	$("#min").html("<span style='font-size: 18px;'>" + temperatura.min + " <sup>o</sup>C</span>");
       }
       LOG(message.destinationName, ' -- ', message.payloadString);
     };

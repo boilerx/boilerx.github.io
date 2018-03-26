@@ -53,8 +53,8 @@
     client.onMessageArrived = function (message) {
       if (message.destinationName === config.sub) {
 	var temperatura = JSON.parse(message.payloadString).temperatura;
-	$("#max").html("<span style='font-size: 18px;'>" + temperatura.max + " <sup>o</sup>C</span>");
-	$("#min").html("<span style='font-size: 18px;'>" + temperatura.min + " <sup>o</sup>C</span>");
+	$("#max").html("<span>" + temperatura.max + " <sup>o</sup>C</span>");
+	$("#min").html("<span>" + temperatura.min + " <sup>o</sup>C</span>");
       }
       LOG(message.destinationName, ' -- ', message.payloadString);
     };
@@ -136,9 +136,9 @@
 		<div class = "col-5">Обратка</div>
 	    </div>
 	    <div class = "row">
-		<div class = "col-5" id="max">
+		<div class = "col-5" style='font-size: 4em;' id="max">
 		</div>
-		<div class = "col-5" id="min">
+		<div class = "col-5" style='font-size: 4em;' id="min">
 		</div>
 	    </div>
 	</div>

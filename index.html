@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.2/mqttws31.min.js" type="text/javascript"></script>  
+  <!--script src="mqttws31.js" type="text/javascript"></script-->
+  <script type="text/javascript">
+
+    var loging = false;
+    function LOG() {
+	var log = "";
+	for (var i = 0; i < arguments.length; i++ ) {
+	    log += arguments[i] + " ";
+        }
+	if (loging) {
+	    $("#console").append("<p>" + log  + "</p>");
+	} else {
+	    console.log(log);
+	}
+    }
+
+    $(function(){
+
+    var token = location.search.split("=")[1];
+    LOG("Token:", token);
+    var jtoken = atob(token);
+    LOG("JWT", jtoken);
+    var config = JSON.parse(jtoken);
+
+    var wsbroker = config.wsbroker || "iot.eclipse.org";  //mqtt websocket enabled broker
+    var wsport = config.wsport || 443 // port for above
+    var clientId = (config.clientId || "boiler") + new Date().getTime();
+    var client = new Paho.MQTT.Client(wsbroker, wsport, clientId); // client-id must be unique
+
+    client.onConnectionLost = function (responseObject) {
+      LOG("connection lost: " + responseObject.errorMessage);
+    };
+
+    client.onMessageArrived = function (message) {
+      if (message.destinationName === config.sub) {
+	var temperatura = JSON.parse(message.payloadString).temperatura;
+	$("#max").html("<span>" + temperatura.max + "</span>");
+	$("#min").html("<span>" + temperatura.min + "</span>");
+      }
+      LOG(message.destinationName, ' -- ', message.payloadString);
+    };
+
+    var options = {
+      useSSL : true,
+      timeout: 3,
+      onSuccess: function () {
+        LOG("mqtt connected");
+        // Connection succeeded; subscribe to our topic, you can add multile lines of these
+        //client.subscribe('/#', {qos: 1});
+        client.subscribe(config.sub, {qos: 0});
+
+    
+	//setInterval(function(){
+        //	message = new Paho.MQTT.Message("Hello " + new Date());
+        //	message.destinationName = "/World";
+        //	client.send(message);
+	//}, 1000);
+  
+      },
+      onFailure: function (message) {
+        LOG("Connection failed: " + message.errorMessage);
+      }
+    };
+
+    client.connect(options);
+
+    var last = "#30";
+
+    $("#30").click(function() {
+	savePoint("0bff","#30");
+    });
+
+    $("#40").click(function() {
+	savePoint("09ff","#40");
+    });
+
+    $("#50").click(function() {
+	savePoint("08ff","#50");
+    });
+
+    $("#60").click(function() {
+	savePoint("07ff","#60");
+    });
+
+    $("#70").click(function() {
+	savePoint("06ff","#70");
+    });
+
+
+    function savePoint(value, sp) {
+	var msg = {"src":"mos-1521908397","id":new Date().getTime(),"method":"I2C.Write","args":{"addr":96,"data_hex":value}}
+    	var message = new Paho.MQTT.Message(JSON.stringify(msg));
+    	message.destinationName = config.pub;
+        message.retained = true;
+    	client.send(message);
+	$(last).css("font-weight","normal");
+	last = sp;
+	$(last).css("font-weight","bold");
+    }
+
+//  function init() {
+//      client.connect(options);
+//  }
+
+
+    });
+    </script>
+
+    <title>Котел</title>
+  </head>
+  <body>
+    <h3>Котел</h3>
+    <div>
+	<h4>Температура, 'C</h4>
+	<table>
+	    <tr><th>подача</th><th>обратка</th></tr>
+	    <tr><td id="max"></td><td id="min"></td></tr>
+	</table>
+    </div>
+    <div>
+	<button id="30">30<sup>o</sup>C</button>
+	<button id="40">40<sup>o</sup>C</button>
+	<button id="50">50<sup>o</sup>C</button>
+	<button id="60">60<sup>o</sup>C</button>
+	<button id="70">70<sup>o</sup>C</button>
+    </div>
+    <div id="console">
+    </div>
+  </body>
+
+</html>
